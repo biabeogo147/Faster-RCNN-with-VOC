@@ -1,0 +1,5 @@
+[core]
+    autostage = true
+    remote = fasterrcnn
+['remote "fasterrcnn"']
+    url = gdrive://1iDO3qoW5cYUSWnAvX0-m_kDbu3RV8gSY
