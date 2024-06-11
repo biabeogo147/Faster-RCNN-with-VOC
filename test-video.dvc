@@ -1,0 +1,6 @@
+outs:
+- md5: 59dbda31589dca4a29f4f0b84a8b1c3d.dir
+  size: 1792712
+  nfiles: 1
+  hash: md5
+  path: test-video
