@@ -119,10 +119,10 @@ def train(args):
                 predictions = model(images)
                 metric.update(predictions, targets)
         mAP_score = metric.compute()
-        writer.add_scalar("Val/Loss", mAP_score["map"], e)
-        writer.add_scalar("Val/Loss 50", mAP_score["map_50"], e)
-        writer.add_scalar("Val/Loss 70", mAP_score["map_75"], e)
-        print("Epoch {} - Validation Loss: {:0.4f}".format(e, mAP_score["map"]))
+        writer.add_scalar("Val/map", mAP_score["map"], e)
+        writer.add_scalar("Val/map 50", mAP_score["map_50"], e)
+        writer.add_scalar("Val/map 70", mAP_score["map_75"], e)
+        print("Epoch {} - Validation map: {:0.4f}".format(e, mAP_score["map"]))
 
         checkpoint = {
             "epoch": e,
