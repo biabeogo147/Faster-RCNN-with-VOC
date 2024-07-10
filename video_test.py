@@ -1,21 +1,10 @@
 import cv2
-import numpy
-import shutil
-import os.path
-import numpy as np
 import torch
+import os.path
 import argparse
 from pprint import pprint
-from tqdm.autonotebook import tqdm
-from torch.optim.optimizer import Optimizer
-from torchvision.datasets import VOCDetection
-from torch.utils.data import DataLoader, Dataset
-from torch.utils.tensorboard import SummaryWriter
-from torchmetrics.detection.mean_ap import MeanAveragePrecision
-from torchvision.transforms import Compose, ToTensor, Resize, ColorJitter, Normalize
-from torchvision.models.detection import fasterrcnn_resnet50_fpn_v2, FasterRCNN_ResNet50_FPN_V2_Weights
 
-import voc_dataset
+import model_loading
 import classes
 
 
@@ -33,14 +22,7 @@ def test(args):
     print(args)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = fasterrcnn_resnet50_fpn_v2().to(device)
-
-    pathModel = os.path.join(args.model_path, "best.pt")
-    if (os.path.isfile(pathModel)):
-        checkpoint = torch.load(pathModel, map_location=device)
-        model.load_state_dict(checkpoint["model_state_dict"])
-    if (os.path.isdir(args.output) == False):
-        os.mkdir(args.output)
+    model = model_loading.loading_model(args)
 
     origin_video = cv2.VideoCapture(args.data_path)
     vid_writer = cv2.VideoWriter(os.path.join(args.output, os.path.basename(args.data_path)),
@@ -56,12 +38,11 @@ def test(args):
 
         image = origin_image
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        mean, std = np.array([0.485, 0.456, 0.406]), np.array([0.229, 0.224, 0.225])
-        image = (image - mean) / std
         image = torch.from_numpy(image.transpose(2, 0, 1) / 255.0).unsqueeze(0).float()
         image = image.to(device)
 
-        predictions = model(image)
+        with torch.no_grad():
+            predictions = model(image)
 
         boxes = predictions[0]["boxes"]
         labels = predictions[0]["labels"]

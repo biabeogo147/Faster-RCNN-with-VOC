@@ -5,13 +5,15 @@ import numpy
 import torch
 import argparse
 from pprint import pprint
+
 from tqdm.autonotebook import tqdm
 from torch.optim.optimizer import Optimizer
 from torchvision.datasets import VOCDetection
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.tensorboard import SummaryWriter
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
-from torchvision.transforms import Compose, ToTensor, Resize, ColorJitter, Normalize
+from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
+from torchvision.transforms import Compose, ToTensor, Resize, ColorJitter, Normalize, RandomAffine
 from torchvision.models.detection import fasterrcnn_resnet50_fpn_v2, FasterRCNN_ResNet50_FPN_V2_Weights
 
 import voc_dataset
@@ -42,17 +44,22 @@ def collate_fn(batch):
 
 def train(args):
     print(args)
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = fasterrcnn_resnet50_fpn_v2(weights=FasterRCNN_ResNet50_FPN_V2_Weights.DEFAULT, trainable_backbone_layers = 1).to(device)
 
     train_transform = Compose([
-        ColorJitter(brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1), #Data Augmentation
-        ToTensor(),
-        Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
+        RandomAffine(
+            degrees=[-10, 10],
+            translate=[0.1, 0.1],
+            scale=[0.9, 1.1],
+            shear=[-10, 10],
+        ),
+        ColorJitter(brightness=0.1,
+                    contrast=0.1,
+                    saturation=0.1,
+                    hue=0.1), #Data Augmentation
+        ToTensor(), #Don't need normalize because the model has a normalization layer
     ])
     val_transform = Compose([
         ToTensor(),
-        Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
     ])
     train_dataset = voc_dataset.VOCDataset(root=args.data_path, year="2012", image_set="train", download=args.download, transform=train_transform)
     val_dataset = voc_dataset.VOCDataset(root=args.data_path, year="2012", image_set="val", download=args.download, transform=val_transform)
@@ -70,6 +77,17 @@ def train(args):
         num_workers=32,
         collate_fn=collate_fn,
     )
+
+    # pprint(train_dataset.classes)
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = fasterrcnn_resnet50_fpn_v2(weights=FasterRCNN_ResNet50_FPN_V2_Weights.DEFAULT,
+                                       trainable_backbone_layers=1)
+    in_channels = model.roi_heads.box_predictor.cls_score.in_features
+    model.roi_heads.box_predictor = FastRCNNPredictor(in_channels, len(train_dataset.classes))
+    # model.roi_heads.box_predictor.cls_score.out_features = len(train_dataset.classes)
+    model.to(device)
+    # pprint(model)
 
     start_epoch = 0
     best_mAP_score = -1
