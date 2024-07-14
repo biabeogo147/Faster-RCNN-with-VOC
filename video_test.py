@@ -24,6 +24,9 @@ def test(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = model_loading.loading_model(args)
 
+    if not os.path.exists(args.output):
+        os.makedirs(args.output)
+
     origin_video = cv2.VideoCapture(args.data_path)
     vid_writer = cv2.VideoWriter(os.path.join(args.output, os.path.basename(args.data_path)),
                                  cv2.VideoWriter_fourcc(*'MJPG'), int(origin_video.get(cv2.CAP_PROP_FPS)),
@@ -38,8 +41,7 @@ def test(args):
 
         image = origin_image
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        image = torch.from_numpy(image.transpose(2, 0, 1) / 255.0).unsqueeze(0).float()
-        image = image.to(device)
+        image = (torch.from_numpy(image.transpose(2, 0, 1) / 255.0).unsqueeze(0).float()).to(device)
 
         with torch.no_grad():
             predictions = model(image)
@@ -51,9 +53,13 @@ def test(args):
             if score > args.confident_threshold:
                 xmin, ymin, xmax, ymax = map(int, box)
                 cv2.rectangle(origin_image, (xmin, ymin), (xmax, ymax), (0, 255, 0), 2)
-                cv2.putText(origin_image, classes.classes[label], (xmin, ymin - 10), cv2.FONT_HERSHEY_SIMPLEX, 1,
+                cv2.putText(origin_image,
+                            classes.classes[label],
+                            (xmin, ymin - 10),
+                            cv2.FONT_HERSHEY_SIMPLEX, 1,
                             (0, 0, 255), 2, cv2.LINE_AA)
         vid_writer.write(origin_image)
+
     vid_writer.release()
     origin_video.release()
 

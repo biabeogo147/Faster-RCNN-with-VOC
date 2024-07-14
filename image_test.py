@@ -28,8 +28,7 @@ def test(args):
 
     image = origin_image
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    image = torch.from_numpy(image.transpose(2, 0, 1) / 255.0).unsqueeze(0).float()
-    image = image.to(device)
+    image = (torch.from_numpy(image.transpose(2, 0, 1) / 255.0).unsqueeze(0).float()).to(device)
 
     model.eval()
     predictions = model(image)
@@ -42,7 +41,14 @@ def test(args):
         if score > args.confident_threshold:
             xmin, ymin, xmax, ymax = map(int, box)
             cv2.rectangle(origin_image, (xmin, ymin), (xmax, ymax), (0, 255, 0), 2)
-            cv2.putText(origin_image, classes.classes[label], (xmin, ymin - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
+            cv2.putText(origin_image,
+                        classes.classes[label],
+                        (xmin, ymin - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1,
+                        (0, 0, 255), 2, cv2.LINE_AA)
+
+    if not os.path.exists(args.output):
+        os.makedirs(args.output)
     cv2.imwrite(os.path.join(args.output, os.path.basename(args.data_path)), origin_image)
 
 

@@ -8,7 +8,6 @@ from pprint import pprint
 
 from tqdm.autonotebook import tqdm
 from torch.optim.optimizer import Optimizer
-from torchvision.datasets import VOCDetection
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.tensorboard import SummaryWriter
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
@@ -82,7 +81,7 @@ def train(args):
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = fasterrcnn_resnet50_fpn_v2(weights=FasterRCNN_ResNet50_FPN_V2_Weights.DEFAULT,
-                                       trainable_backbone_layers=1)
+                                       trainable_backbone_layers=3)
     in_channels = model.roi_heads.box_predictor.cls_score.in_features
     model.roi_heads.box_predictor = FastRCNNPredictor(in_channels, len(train_dataset.classes))
     # model.roi_heads.box_predictor.cls_score.out_features = len(train_dataset.classes)

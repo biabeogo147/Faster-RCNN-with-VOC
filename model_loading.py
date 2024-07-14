@@ -26,4 +26,4 @@ def loading_model(args):
 
 
 if __name__ == '__main__':
-    model = loading_model()
+    pass
