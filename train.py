@@ -101,8 +101,8 @@ def train(args):
 
     if (os.path.isdir(args.log_dir) == False):
         os.mkdir(args.log_dir)
-    else:
-        shutil.rmtree(args.log_dir)
+    # else:
+    #     shutil.rmtree(args.log_dir)
     writer = SummaryWriter(args.log_dir)
 
     for e in range(start_epoch + 1, args.epochs):
