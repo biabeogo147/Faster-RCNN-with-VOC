@@ -21,6 +21,7 @@ import voc_dataset
 def get_args():
     parser = argparse.ArgumentParser(description='voc detection training script')
     parser.add_argument('--log-dir', '-log', type=str, default='logs-tensorboard', help='log directory')
+    parser.add_argument('--num-workers', '-nw', type=int, default=12, help='number of workers')
     parser.add_argument('--batch-size', '-b', type=int, default=4, help='input batch size')
     parser.add_argument('--data-path', '-d', type=str, default='data', help='path to dataset')
     parser.add_argument('--download', '-dl', type=bool, default=False, help='download dataset')
@@ -66,14 +67,14 @@ def train(args):
         train_dataset,
         batch_size=args.batch_size,
         shuffle=True,
-        num_workers=32,
+        num_workers=args.num_workers,
         collate_fn=collate_fn,
     )
     val_loader = DataLoader(
         val_dataset,
         batch_size=args.batch_size,
         shuffle=False,
-        num_workers=32,
+        num_workers=args.num_workers,
         collate_fn=collate_fn,
     )
 
